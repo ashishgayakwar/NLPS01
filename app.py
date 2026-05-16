@@ -618,6 +618,15 @@ HTML_PAGE = """<!DOCTYPE html>
     doSearch();
   }
 
+  window.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const initialQuery = params.get("q");
+    if (initialQuery) {
+      q.value = initialQuery;
+      doSearch();
+    }
+  });
+
   let debounceTimer;
   q.addEventListener("input", () => {
     clearTimeout(debounceTimer);
@@ -683,7 +692,7 @@ HTML_PAGE = """<!DOCTYPE html>
     const clarifierQuestion = decision && decision.clarifier_question ? '<div class="clarifier-question">' + escapeHtml(decision.clarifier_question) + '</div>' : '';
     const clarifierChips = decision && decision.clarifier_chips && decision.clarifier_chips.length
       ? '<div class="clarifier-chips">' + decision.clarifier_chips.map(chip =>
-          '<a class="clarifier-chip" href="/search?q=' + encodeURIComponent(query + ' ' + chip) + '">' + escapeHtml(chip) + '</a>'
+          '<a class="clarifier-chip" href="/?q=' + encodeURIComponent(query + ' ' + chip) + '">' + escapeHtml(chip) + '</a>'
         ).join("") + '</div>'
       : '';
     const header = '<div class="results-header">' +
