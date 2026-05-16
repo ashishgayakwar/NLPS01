@@ -386,6 +386,20 @@ HTML_PAGE = """<!DOCTYPE html>
     font-size: 14px;
     line-height: 1.6;
     max-width: 720px;
+    margin-bottom: 14px;
+  }
+  .primary-section-label {
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 16px 0 6px;
+  }
+  .primary-next-copy {
+    color: var(--text-muted);
+    font-size: 13.5px;
+    line-height: 1.55;
     margin-bottom: 18px;
   }
   .primary-actions {
@@ -434,11 +448,19 @@ HTML_PAGE = """<!DOCTYPE html>
     font-size: 12px;
     font-weight: 700;
   }
+  .alternative-desc {
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.45;
+    margin-top: 6px;
+    max-width: 520px;
+  }
   .alternative-actions {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+    flex-wrap: wrap;
   }
   .read-more-link {
     color: var(--orange);
@@ -446,6 +468,13 @@ HTML_PAGE = """<!DOCTYPE html>
     font-weight: 800;
     text-decoration: none;
     white-space: nowrap;
+  }
+  .choose-link {
+    background: var(--blue-soft);
+    color: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 7px 11px;
   }
 
   .consult-card {
@@ -498,6 +527,159 @@ HTML_PAGE = """<!DOCTYPE html>
   .consult-btn.primary { background: var(--orange); color: white; }
   .consult-btn.secondary { background: white; color: var(--orange); }
 
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 42, 94, 0.58);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+  }
+  .modal-overlay.open { display: flex; }
+  .consultation-modal {
+    width: min(460px, 100%);
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-header {
+    background: var(--navy);
+    color: white;
+    padding: 20px 22px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+  }
+  .modal-title {
+    font-size: 19px;
+    font-weight: 800;
+  }
+  .modal-close {
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .modal-body { padding: 22px; }
+  .form-field { margin-bottom: 14px; }
+  .form-label {
+    display: block;
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+    margin-bottom: 7px;
+  }
+  .form-input,
+  .form-select {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 13px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    outline: none;
+  }
+  .form-input:focus,
+  .form-select:focus {
+    border-color: var(--navy-light);
+    box-shadow: 0 0 0 3px rgba(46, 79, 160, 0.12);
+  }
+  .phone-input-wrap {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    background: white;
+  }
+  .phone-prefix {
+    color: var(--navy);
+    font-weight: 800;
+    padding: 0 12px;
+    border-right: 1px solid var(--border);
+    background: var(--blue-soft);
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+  }
+  .phone-input-wrap .form-input {
+    border: 0;
+    border-radius: 0;
+  }
+  .phone-input-wrap:focus-within {
+    border-color: var(--navy-light);
+    box-shadow: 0 0 0 3px rgba(46, 79, 160, 0.12);
+  }
+  .form-error {
+    color: #b42318;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 6px;
+    min-height: 16px;
+  }
+  .form-submit {
+    width: 100%;
+    border: 0;
+    border-radius: 14px;
+    padding: 13px 16px;
+    background: var(--orange);
+    color: white;
+    font-size: 15px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .privacy-line {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+    margin-top: 12px;
+  }
+  .modal-success {
+    display: none;
+    padding: 26px 22px 24px;
+    text-align: center;
+  }
+  .modal-success-title {
+    color: var(--navy);
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .modal-success-message {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 18px;
+  }
+  .success-close {
+    border: 1px solid var(--orange);
+    border-radius: 14px;
+    background: var(--orange);
+    color: white;
+    padding: 11px 18px;
+    font-size: 14px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
   .loading { text-align: center; color: var(--navy); padding: 32px 20px; font-size: 14px; }
   .loading-dot {
     display: inline-block;
@@ -532,6 +714,12 @@ HTML_PAGE = """<!DOCTYPE html>
     .alternative-actions {
       margin-top: 10px;
     }
+    .consultation-modal {
+      border-radius: 20px;
+    }
+    .modal-body {
+      padding: 18px;
+    }
   }
 </style>
 </head>
@@ -542,7 +730,7 @@ HTML_PAGE = """<!DOCTYPE html>
     <div class="logo-mark">P</div>
     Pristyn Care
   </div>
-  <button class="header-cta">Book Free Consultation</button>
+  <button class="header-cta consultation-trigger" data-treatment="Doctor Consultation">Book Free Consultation</button>
 </header>
 
 <section class="hero">
@@ -589,6 +777,59 @@ HTML_PAGE = """<!DOCTYPE html>
   </div>
 </main>
 
+<div class="modal-overlay" id="consultation-modal" aria-hidden="true">
+  <div class="consultation-modal" role="dialog" aria-modal="true" aria-labelledby="consultation-modal-title">
+    <div class="modal-header">
+      <div class="modal-title" id="consultation-modal-title">Book FREE Consultation</div>
+      <button class="modal-close" type="button" aria-label="Close consultation form">&times;</button>
+    </div>
+    <form class="modal-body" id="consultation-form" novalidate>
+      <div class="form-field">
+        <label class="form-label" for="consultation-name">Full name</label>
+        <input class="form-input" id="consultation-name" name="name" autocomplete="name" />
+        <div class="form-error" data-error-for="name"></div>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="consultation-phone">Phone number</label>
+        <div class="phone-input-wrap">
+          <span class="phone-prefix">+91</span>
+          <input class="form-input" id="consultation-phone" name="phone" inputmode="numeric" autocomplete="tel-national" maxlength="10" />
+        </div>
+        <div class="form-error" data-error-for="phone"></div>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="consultation-city">City</label>
+        <select class="form-select" id="consultation-city" name="city">
+          <option value="">Select city</option>
+          <option value="Gurugram">Gurugram</option>
+          <option value="Delhi">Delhi</option>
+          <option value="Mumbai">Mumbai</option>
+          <option value="Bengaluru">Bengaluru</option>
+          <option value="Hyderabad">Hyderabad</option>
+          <option value="Pune">Pune</option>
+          <option value="Chennai">Chennai</option>
+        </select>
+        <div class="form-error" data-error-for="city"></div>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="consultation-treatment">Treatment</label>
+        <select class="form-select" id="consultation-treatment" name="treatment">
+          <option value="">Select treatment</option>
+          <option value="Doctor Consultation">Doctor Consultation</option>
+        </select>
+        <div class="form-error" data-error-for="treatment"></div>
+      </div>
+      <button class="form-submit" type="submit">Book Free Consultation</button>
+      <div class="privacy-line">Your data is secured. We prioritize your medical privacy.</div>
+    </form>
+    <div class="modal-success" id="consultation-success">
+      <div class="modal-success-title">Request received</div>
+      <div class="modal-success-message">Our care coordinator will contact you shortly.</div>
+      <button class="success-close" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="footer-note">
   Powered by OpenAI embeddings - Demo prototype - Not affiliated with Pristyn Care
 </div>
@@ -596,6 +837,13 @@ HTML_PAGE = """<!DOCTYPE html>
 <script>
   const q = document.getElementById("q");
   const resultsSection = document.getElementById("results-section");
+  const consultationModal = document.getElementById("consultation-modal");
+  const consultationForm = document.getElementById("consultation-form");
+  const consultationSuccess = document.getElementById("consultation-success");
+  const consultationName = document.getElementById("consultation-name");
+  const consultationPhone = document.getElementById("consultation-phone");
+  const consultationCity = document.getElementById("consultation-city");
+  const consultationTreatment = document.getElementById("consultation-treatment");
 
   const categoryIcon = {
     "Proctology": "\U0001FA7A",
@@ -682,7 +930,7 @@ HTML_PAGE = """<!DOCTYPE html>
           '<div class="consult-copy consult-secondary">We could not confidently map this to one treatment. A Pristyn care coordinator can help route you to the right specialist.</div>' +
           safetyNote +
           '<div class="consult-actions">' +
-            '<a class="consult-btn primary" href="#">Book Free Consultation</a>' +
+            '<a class="consult-btn primary consultation-trigger" href="#" data-treatment="Doctor Consultation">Book Free Consultation</a>' +
             '<a class="consult-btn secondary" href="tel:">Call Now</a>' +
           '</div>' +
         '</div>';
@@ -708,7 +956,7 @@ HTML_PAGE = """<!DOCTYPE html>
       return;
     }
 
-    if (state === 'direct_match') {
+    if (state === 'direct_match' || state === 'needs_confirmation' || state === 'needs_clarification') {
       const primary = decision && decision.primary_result ? decision.primary_result : items[0];
       const primaryKey = resultKey(primary);
       const sourceAlternatives = decision && decision.alternatives && decision.alternatives.length
@@ -717,73 +965,23 @@ HTML_PAGE = """<!DOCTYPE html>
       const alternatives = sourceAlternatives
         .filter(it => resultKey(it) !== primaryKey)
         .slice(0, 3);
+      const primaryBadge = state === 'direct_match'
+        ? 'Best Match'
+        : state === 'needs_confirmation'
+          ? 'Likely Match'
+          : 'Starting Point';
 
-      const primaryUrl = primary.url || '#';
-      const primaryCard =
-        '<div class="primary-match-card">' +
-          '<div class="primary-match-top">' +
-            '<div>' +
-              '<div class="primary-match-title">' + escapeHtml(primary.name) + '</div>' +
-              '<div class="specialist-line">' + escapeHtml(getSpecialist(primary)) + '</div>' +
-            '</div>' +
-            '<span class="top-badge">Best Match</span>' +
-          '</div>' +
-          '<div class="primary-match-desc">' + escapeHtml(shortDescription(primary.description)) + '</div>' +
-          '<div class="primary-actions">' +
-            '<!-- TODO: Replace placeholder consultation and call links with real Pristyn lead/call links. -->' +
-            '<a class="primary-action primary" href="#">Book Free Consultation</a>' +
-            '<a class="primary-action secondary" href="tel:+910000000000">Call Now</a>' +
-            '<a class="primary-action link" href="' + escapeAttr(primaryUrl) + '" target="_blank" rel="noopener">Read more on Pristyn \u2192</a>' +
-          '</div>' +
-        '</div>';
-
-      const alternativeCards = alternatives.length
-        ? '<div class="alternatives-title">Other possible matches</div>' + alternatives.map(it =>
-            '<div class="alternative-card">' +
-              '<div>' +
-                '<div class="alternative-title">' + escapeHtml(it.name) + '</div>' +
-                '<div class="alternative-meta">' + escapeHtml(getSpecialist(it)) + '</div>' +
-              '</div>' +
-              '<div class="alternative-actions">' +
-                '<span class="top-badge">Also possible</span>' +
-                '<a class="read-more-link" href="' + escapeAttr(it.url || '#') + '" target="_blank" rel="noopener">Read more</a>' +
-              '</div>' +
-            '</div>'
-          ).join("")
-        : '';
-
-      resultsSection.innerHTML = header + primaryCard + alternativeCards;
+      resultsSection.innerHTML =
+        header +
+        renderPrimaryTreatmentCard(primary, primaryBadge) +
+        renderAlternativeCards(alternatives);
       return;
     }
 
-    const cards = items.map((it, idx) => {
-      const isTop = idx === 0;
-      const icon = categoryIcon[it.category] || "\U0001F3E5";
-      let badge = '';
-      if (state === 'needs_clarification' && isTop) {
-        badge = 'Starting Point';
-      } else if (state === 'needs_confirmation') {
-        badge = isTop ? 'Likely Match' : 'Also Possible';
-      } else if (state === 'direct_match' && isTop) {
-        badge = 'Best Match';
-      } else if (isTop) {
-        badge = 'Likely Match';
-      }
-      return '<div class="result-card ' + (isTop ? 'top-result' : '') + '">' +
-        '<div class="result-icon">' + icon + '</div>' +
-        '<div class="result-body">' +
-          '<div class="result-name">' + escapeHtml(it.name) + '</div>' +
-          '<div class="result-hindi">' + escapeHtml(it.hindi_name) + '</div>' +
-          '<div class="result-desc">' + escapeHtml(it.description) + '</div>' +
-          '<div class="meta-row">' +
-            (badge ? '<span class="top-badge">' + escapeHtml(badge) + '</span>' : '') +
-            '<span class="category-pill">' + escapeHtml(it.category) + '</span>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-    }).join("");
-
-    resultsSection.innerHTML = header + cards;
+    resultsSection.innerHTML =
+      header +
+      renderPrimaryTreatmentCard(items[0], 'Likely Match') +
+      renderAlternativeCards(items.slice(1, 4));
   }
 
   function escapeHtml(s) {
@@ -801,12 +999,54 @@ HTML_PAGE = """<!DOCTYPE html>
     return it.slug || it.url || it.name || "";
   }
 
-  function shortDescription(text) {
+  function renderPrimaryTreatmentCard(item, badge) {
+    const primaryUrl = item.url || '#';
+    return '<div class="primary-match-card">' +
+      '<div class="primary-match-top">' +
+        '<div>' +
+          '<div class="primary-match-title">' + escapeHtml(item.name) + '</div>' +
+          '<div class="specialist-line">' + escapeHtml(getSpecialist(item)) + '</div>' +
+        '</div>' +
+        '<span class="top-badge">' + escapeHtml(badge) + '</span>' +
+      '</div>' +
+      '<div class="primary-section-label">Why this may be relevant</div>' +
+      '<div class="primary-match-desc">' + escapeHtml(shortDescription(item.description, 180)) + '</div>' +
+      '<div class="primary-section-label">Next step</div>' +
+      '<div class="primary-next-copy">Speak with a Pristyn specialist to confirm the condition and understand the right treatment path.</div>' +
+      '<div class="primary-actions">' +
+        '<!-- TODO: Replace placeholder consultation and call links with real Pristyn lead/call links. -->' +
+        '<a class="primary-action primary consultation-trigger" href="#" data-treatment="' + escapeAttr(item.name || 'Doctor Consultation') + '">Book Free Consultation</a>' +
+        '<a class="primary-action secondary" href="tel:+910000000000">Call Now</a>' +
+        '<a class="primary-action link" href="' + escapeAttr(primaryUrl) + '" target="_blank" rel="noopener">Read more on Pristyn \u2192</a>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderAlternativeCards(alternatives) {
+    if (!alternatives.length) return '';
+    return '<div class="alternatives-title">Other possible matches</div>' + alternatives.map(it =>
+      '<div class="alternative-card">' +
+        '<div>' +
+          '<div class="alternative-title">' + escapeHtml(it.name) + '</div>' +
+          '<div class="alternative-meta">' + escapeHtml(getSpecialist(it)) + '</div>' +
+          '<div class="alternative-desc">' + escapeHtml(shortDescription(it.description, 115)) + '</div>' +
+        '</div>' +
+        '<div class="alternative-actions">' +
+          '<span class="top-badge">Also Possible</span>' +
+          '<a class="read-more-link choose-link" href="/?q=' + encodeURIComponent(it.name || '') + '">Choose this</a>' +
+          '<a class="read-more-link" href="' + escapeAttr(it.url || '#') + '" target="_blank" rel="noopener">Read more</a>' +
+        '</div>' +
+      '</div>'
+    ).join("");
+  }
+
+  function shortDescription(text, maxLength = 180) {
     const clean = (text || "A Pristyn care coordinator can help you understand the right treatment path.").replace(/\\s+/g, " ").trim();
-    if (clean.length <= 180) return clean;
-    const clipped = clean.slice(0, 180);
+    if (clean.length <= maxLength) return clean;
+    const clipped = clean.slice(0, maxLength);
     const lastSpace = clipped.lastIndexOf(" ");
-    return (lastSpace > 120 ? clipped.slice(0, lastSpace) : clipped).trim() + "...";
+    const minBreak = Math.max(40, Math.floor(maxLength * 0.65));
+    return (lastSpace > minBreak ? clipped.slice(0, lastSpace) : clipped).trim() + "...";
   }
 
   function getSpecialist(it) {
@@ -823,6 +1063,100 @@ HTML_PAGE = """<!DOCTYPE html>
     if (/infertility/.test(haystack)) return "Fertility Specialist";
     if (/knee/.test(haystack)) return "Orthopedic Doctor";
     return "Specialist Doctor";
+  }
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest(".consultation-trigger");
+    if (trigger) {
+      event.preventDefault();
+      openConsultationModal(trigger.dataset.treatment || "Doctor Consultation");
+      return;
+    }
+    if (event.target === consultationModal) {
+      closeConsultationModal();
+    }
+  });
+
+  document.querySelector(".modal-close").addEventListener("click", closeConsultationModal);
+  document.querySelector(".success-close").addEventListener("click", closeConsultationModal);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && consultationModal.classList.contains("open")) {
+      closeConsultationModal();
+    }
+  });
+
+  consultationForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!validateConsultationForm()) return;
+
+    // TODO: Send this validated payload to the real Pristyn lead API.
+    consultationForm.style.display = "none";
+    consultationSuccess.style.display = "block";
+  });
+
+  function openConsultationModal(treatmentName) {
+    clearConsultationErrors();
+    consultationForm.reset();
+    consultationCity.value = "Gurugram";
+    setTreatmentValue(treatmentName || "Doctor Consultation");
+    consultationForm.style.display = "block";
+    consultationSuccess.style.display = "none";
+    consultationModal.classList.add("open");
+    consultationModal.setAttribute("aria-hidden", "false");
+    consultationName.focus();
+  }
+
+  function closeConsultationModal() {
+    consultationModal.classList.remove("open");
+    consultationModal.setAttribute("aria-hidden", "true");
+  }
+
+  function validateConsultationForm() {
+    clearConsultationErrors();
+    let isValid = true;
+    const phoneDigits = consultationPhone.value.replace(/\\D/g, "");
+
+    if (!consultationName.value.trim()) {
+      setConsultationError("name", "Please enter your full name.");
+      isValid = false;
+    }
+    if (!/^\\d{10}$/.test(phoneDigits)) {
+      setConsultationError("phone", "Please enter a valid 10-digit phone number.");
+      isValid = false;
+    }
+    if (!consultationCity.value) {
+      setConsultationError("city", "Please select your city.");
+      isValid = false;
+    }
+    if (!consultationTreatment.value) {
+      setConsultationError("treatment", "Please select a treatment.");
+      isValid = false;
+    }
+    return isValid;
+  }
+
+  function setTreatmentValue(treatmentName) {
+    const value = treatmentName || "Doctor Consultation";
+    const exists = Array.from(consultationTreatment.options).some(option => option.value === value);
+    if (!exists) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = value;
+      consultationTreatment.appendChild(option);
+    }
+    consultationTreatment.value = value;
+  }
+
+  function setConsultationError(field, message) {
+    const error = document.querySelector('[data-error-for="' + field + '"]');
+    if (error) error.textContent = message;
+  }
+
+  function clearConsultationErrors() {
+    document.querySelectorAll(".form-error").forEach(error => {
+      error.textContent = "";
+    });
   }
 </script>
 
