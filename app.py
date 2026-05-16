@@ -8,10 +8,12 @@ from dataclasses import asdict
 
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from intent_router import route_patient_intent
 from search import SemanticSearch
 
 app = FastAPI(title="Pristyn Care - Smart Search Demo")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 print("Initializing search engine (this happens once at startup)...")
 engine = SemanticSearch()
@@ -68,24 +70,11 @@ HTML_PAGE = """<!DOCTYPE html>
     top: 0;
     z-index: 100;
   }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 800;
-    font-size: 22px;
-    color: var(--navy);
-  }
-  .logo-mark {
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, var(--navy) 0%, var(--orange) 100%);
-    border-radius: 14px;
-    display: grid;
-    place-items: center;
-    color: white;
-    font-size: 16px;
-    font-weight: 800;
+  .brand-logo {
+    display: block;
+    height: 38px;
+    width: auto;
+    object-fit: contain;
   }
   .header-cta {
     background: var(--orange);
@@ -697,13 +686,12 @@ HTML_PAGE = """<!DOCTYPE html>
     40% { transform: scale(1); }
   }
 
-  .footer-note { text-align: center; color: var(--text-light); font-size: 12px; padding: 32px 16px; }
-
   @media (max-width: 720px) {
     .hero { padding: 40px 20px 72px; }
     .hero h1 { font-size: 30px; }
     .main { padding: 0 16px 48px; }
     .main { margin-top: -16px; }
+    .brand-logo { height: 32px; }
     .search-btn { padding: 12px 16px; font-size: 14px; }
     .result-card { padding: 18px 18px; }
     .primary-match-top,
@@ -726,10 +714,7 @@ HTML_PAGE = """<!DOCTYPE html>
 <body>
 
 <header class="header">
-  <div class="logo">
-    <div class="logo-mark">P</div>
-    Pristyn Care
-  </div>
+  <img src="/static/pristyn-logo.svg" alt="Pristyn Care" class="brand-logo" />
   <button class="header-cta consultation-trigger" data-treatment="Doctor Consultation">Book Free Consultation</button>
 </header>
 
@@ -828,10 +813,6 @@ HTML_PAGE = """<!DOCTYPE html>
       <button class="success-close" type="button">Close</button>
     </div>
   </div>
-</div>
-
-<div class="footer-note">
-  Powered by OpenAI embeddings - Demo prototype - Not affiliated with Pristyn Care
 </div>
 
 <script>
