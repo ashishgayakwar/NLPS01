@@ -354,6 +354,100 @@ HTML_PAGE = """<!DOCTYPE html>
     display: none !important;
   }
 
+  .primary-match-card {
+    background: white;
+    border: 2px solid var(--orange);
+    border-radius: 24px;
+    padding: 26px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 18px;
+  }
+  .primary-match-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .primary-match-title {
+    color: var(--navy);
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+  .specialist-line {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+  .primary-match-desc {
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 720px;
+    margin-bottom: 18px;
+  }
+  .primary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .primary-action {
+    border-radius: 14px;
+    padding: 11px 16px;
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+    border: 1px solid var(--orange);
+  }
+  .primary-action.primary { background: var(--orange); color: white; }
+  .primary-action.secondary { background: white; color: var(--orange); }
+  .primary-action.link { border-color: var(--border); color: var(--navy); background: var(--blue-soft); }
+  .alternatives-title {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 18px 0 10px;
+  }
+  .alternative-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+  }
+  .alternative-title {
+    color: var(--navy);
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .alternative-meta {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .alternative-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .read-more-link {
+    color: var(--orange);
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
   .consult-card {
     background: white;
     border: 1px solid var(--border);
@@ -430,6 +524,14 @@ HTML_PAGE = """<!DOCTYPE html>
     .main { margin-top: -16px; }
     .search-btn { padding: 12px 16px; font-size: 14px; }
     .result-card { padding: 18px 18px; }
+    .primary-match-top,
+    .alternative-card {
+      display: block;
+    }
+    .top-badge,
+    .alternative-actions {
+      margin-top: 10px;
+    }
   }
 </style>
 </head>
@@ -597,6 +699,54 @@ HTML_PAGE = """<!DOCTYPE html>
       return;
     }
 
+    if (state === 'direct_match') {
+      const primary = decision && decision.primary_result ? decision.primary_result : items[0];
+      const primaryKey = resultKey(primary);
+      const sourceAlternatives = decision && decision.alternatives && decision.alternatives.length
+        ? decision.alternatives
+        : items.slice(1);
+      const alternatives = sourceAlternatives
+        .filter(it => resultKey(it) !== primaryKey)
+        .slice(0, 3);
+
+      const primaryUrl = primary.url || '#';
+      const primaryCard =
+        '<div class="primary-match-card">' +
+          '<div class="primary-match-top">' +
+            '<div>' +
+              '<div class="primary-match-title">' + escapeHtml(primary.name) + '</div>' +
+              '<div class="specialist-line">' + escapeHtml(getSpecialist(primary)) + '</div>' +
+            '</div>' +
+            '<span class="top-badge">Best Match</span>' +
+          '</div>' +
+          '<div class="primary-match-desc">' + escapeHtml(shortDescription(primary.description)) + '</div>' +
+          '<div class="primary-actions">' +
+            '<!-- TODO: Replace placeholder consultation and call links with real Pristyn lead/call links. -->' +
+            '<a class="primary-action primary" href="#">Book Free Consultation</a>' +
+            '<a class="primary-action secondary" href="tel:+910000000000">Call Now</a>' +
+            '<a class="primary-action link" href="' + escapeAttr(primaryUrl) + '" target="_blank" rel="noopener">Read more on Pristyn \u2192</a>' +
+          '</div>' +
+        '</div>';
+
+      const alternativeCards = alternatives.length
+        ? '<div class="alternatives-title">Other possible matches</div>' + alternatives.map(it =>
+            '<div class="alternative-card">' +
+              '<div>' +
+                '<div class="alternative-title">' + escapeHtml(it.name) + '</div>' +
+                '<div class="alternative-meta">' + escapeHtml(getSpecialist(it)) + '</div>' +
+              '</div>' +
+              '<div class="alternative-actions">' +
+                '<span class="top-badge">Also possible</span>' +
+                '<a class="read-more-link" href="' + escapeAttr(it.url || '#') + '" target="_blank" rel="noopener">Read more</a>' +
+              '</div>' +
+            '</div>'
+          ).join("")
+        : '';
+
+      resultsSection.innerHTML = header + primaryCard + alternativeCards;
+      return;
+    }
+
     const cards = items.map((it, idx) => {
       const isTop = idx === 0;
       const icon = categoryIcon[it.category] || "\U0001F3E5";
@@ -631,6 +781,39 @@ HTML_PAGE = """<!DOCTYPE html>
     const d = document.createElement("div");
     d.innerText = s == null ? "" : s;
     return d.innerHTML;
+  }
+
+  function escapeAttr(s) {
+    return escapeHtml(s).replace(/"/g, "&quot;");
+  }
+
+  function resultKey(it) {
+    if (!it) return "";
+    return it.slug || it.url || it.name || "";
+  }
+
+  function shortDescription(text) {
+    const clean = (text || "A Pristyn care coordinator can help you understand the right treatment path.").replace(/\\s+/g, " ").trim();
+    if (clean.length <= 180) return clean;
+    const clipped = clean.slice(0, 180);
+    const lastSpace = clipped.lastIndexOf(" ");
+    return (lastSpace > 120 ? clipped.slice(0, lastSpace) : clipped).trim() + "...";
+  }
+
+  function getSpecialist(it) {
+    const haystack = [it && it.slug, it && it.name, it && it.category, it && it.description]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    if (/piles|fissure|fistula/.test(haystack)) return "Proctologist";
+    if (/kidney stone|urinary|circumcision|phimosis/.test(haystack)) return "Urologist";
+    if (/hernia|appendix|gallstone/.test(haystack)) return "General Surgeon";
+    if (/cataract|lasik/.test(haystack)) return "Ophthalmologist";
+    if (/tinnitus|ear|snoring/.test(haystack)) return "ENT Specialist";
+    if (/varicose/.test(haystack)) return "Vascular Specialist";
+    if (/infertility/.test(haystack)) return "Fertility Specialist";
+    if (/knee/.test(haystack)) return "Orthopedic Doctor";
+    return "Specialist Doctor";
   }
 </script>
 

@@ -30,8 +30,10 @@ CLEAR_TREATMENT_TERMS = (
     "bavasir",
     "bawaseer",
     "piles",
-    "pathri",
     "kidney stone",
+    "gallstone",
+    "gall bladder stone",
+    "gallbladder stone",
     "hernia",
     "kharrate",
     "snoring",
@@ -39,6 +41,27 @@ CLEAR_TREATMENT_TERMS = (
     "bachcha nahi",
     "bacha nahi",
     "infertility",
+)
+
+BROAD_STONE_TERMS = (
+    "pathri",
+    "patthri",
+    "pattari",
+    "stone",
+)
+
+SPECIFIC_STONE_TERMS = (
+    "kidney",
+    "gurda",
+    "gurde",
+    "urine",
+    "urinary",
+    "peshab",
+    "gallbladder",
+    "gall bladder",
+    "gallstone",
+    "pit ki thaili",
+    "pitt ki thaili",
 )
 
 BROAD_BODY_PART_CHIPS = {
@@ -59,6 +82,12 @@ def _normalized(query: str) -> str:
 
 def _contains_any(query: str, terms: tuple[str, ...]) -> bool:
     return any(term in query for term in terms)
+
+
+def _has_ambiguous_stone_intent(query: str) -> bool:
+    has_broad_stone = _contains_any(query, BROAD_STONE_TERMS)
+    has_specific_stone = _contains_any(query, SPECIFIC_STONE_TERMS)
+    return has_broad_stone and not has_specific_stone
 
 
 def _top_score(results: list[dict]) -> float:
@@ -102,7 +131,23 @@ def route_patient_intent(query: str, results: list[dict]) -> JourneyDecision:
     if not results or top_score < 0.45:
         return _doctor_fallback(query, results, "We could not confidently match this to a treatment.")
 
-    has_clear_treatment = _contains_any(normalized_query, CLEAR_TREATMENT_TERMS)
+    if _has_ambiguous_stone_intent(normalized_query):
+        return JourneyDecision(
+            state="needs_clarification",
+            title="A little more detail would help",
+            message="Pathri can refer to different stone-related conditions, so we should narrow this before choosing a treatment.",
+            primary_result=top_result,
+            alternatives=alternatives,
+            clarifier_question="Pathri can mean different types of stones. Which one is closest?",
+            clarifier_chips=["Kidney / urine stone", "Gallbladder stone", "Not sure"],
+            safety_note="This is only a search guide, not a diagnosis.",
+        )
+
+    has_specific_stone_intent = (
+        _contains_any(normalized_query, BROAD_STONE_TERMS)
+        and _contains_any(normalized_query, SPECIFIC_STONE_TERMS)
+    )
+    has_clear_treatment = _contains_any(normalized_query, CLEAR_TREATMENT_TERMS) or has_specific_stone_intent
     has_broad_body_part = any(term in normalized_query for term in BROAD_BODY_PART_CHIPS)
 
     if has_broad_body_part and not has_clear_treatment:
