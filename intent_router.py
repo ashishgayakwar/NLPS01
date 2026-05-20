@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from pprint import pprint
 
+from body_system_router import BodySystemDecision, classify_body_system_intent
+
 
 @dataclass
 class JourneyDecision:
@@ -236,6 +238,22 @@ def _doctor_fallback(query: str, results: list[dict], reason: str) -> JourneyDec
     )
 
 
+def _body_system_journey_decision(
+    body_decision: BodySystemDecision,
+    results: list[dict],
+) -> JourneyDecision:
+    return JourneyDecision(
+        state=body_decision.state,
+        title=body_decision.title,
+        message=body_decision.message,
+        primary_result=results[0] if results else None,
+        alternatives=results[1:4] if len(results) > 1 else [],
+        clarifier_question=body_decision.clarifier_question,
+        clarifier_chips=body_decision.clarifier_chips,
+        safety_note=body_decision.safety_note,
+    )
+
+
 def _clarifier_chips_for(query: str) -> list[str | dict]:
     chips: list[str | dict] = []
     seen_labels: set[str] = set()
@@ -265,6 +283,10 @@ def route_patient_intent(query: str, results: list[dict]) -> JourneyDecision:
 
     if _contains_any(normalized_query, RISKY_TERMS):
         return _doctor_fallback(query, results, "Your query includes a possible warning symptom.")
+
+    body_system_decision = classify_body_system_intent(normalized_query)
+    if body_system_decision:
+        return _body_system_journey_decision(body_system_decision, results)
 
     if not results or top_score < 0.45:
         return _doctor_fallback(query, results, "We could not confidently match this to a treatment.")
