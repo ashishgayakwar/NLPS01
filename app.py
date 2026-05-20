@@ -239,6 +239,36 @@ HTML_PAGE = """<!DOCTYPE html>
     border-color: var(--orange);
     color: var(--orange);
   }
+  .clarification-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+  }
+  .clarification-title {
+    color: var(--navy);
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .clarification-message {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.55;
+    max-width: 680px;
+  }
+  .clarification-fallback {
+    border-top: 1px solid var(--border);
+    margin-top: 18px;
+    padding-top: 16px;
+  }
+  .clarification-fallback-copy {
+    color: var(--text-muted);
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
 
   .empty-state {
     background: #fafbff;
@@ -866,11 +896,12 @@ HTML_PAGE = """<!DOCTYPE html>
   });
 
   async function doSearch() {
-    const query = q.value.trim();
+    const query = cleanQuery(q.value);
     if (!query) {
       renderEmpty();
       return;
     }
+    if (q.value !== query) q.value = query;
     resultsSection.innerHTML = '<div class="loading"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span><div style="margin-top:8px">Finding the best treatments for you</div></div>';
     try {
       const res = await fetch("/search?q=" + encodeURIComponent(query));
@@ -892,9 +923,7 @@ HTML_PAGE = """<!DOCTYPE html>
     const message = decision && decision.message ? decision.message : items.length + ' matches';
     const state = decision && decision.state ? decision.state : '';
     let sectionLabel = items.length + ' matches';
-    if (state === 'needs_clarification') {
-      sectionLabel = 'Likely starting point';
-    } else if (state === 'direct_match') {
+    if (state === 'direct_match') {
       sectionLabel = 'Best match found';
     } else if (state === 'needs_confirmation') {
       sectionLabel = 'Please confirm the closest match';
@@ -918,12 +947,28 @@ HTML_PAGE = """<!DOCTYPE html>
       return;
     }
 
-    const clarifierQuestion = decision && decision.clarifier_question ? '<div class="clarifier-question">' + escapeHtml(decision.clarifier_question) + '</div>' : '';
-    const clarifierChips = decision && decision.clarifier_chips && decision.clarifier_chips.length
-      ? '<div class="clarifier-chips">' + decision.clarifier_chips.map(chip =>
-          '<a class="clarifier-chip" href="/?q=' + encodeURIComponent(query + ' ' + chip) + '">' + escapeHtml(chip) + '</a>'
-        ).join("") + '</div>'
-      : '';
+    const clarifierQuestion = renderClarifierQuestion(decision);
+    const clarifierChips = renderClarifierChips(decision);
+
+    if (state === 'needs_clarification') {
+      const weakClarificationTitles = ['Help us narrow it down', 'A little more detail would help'];
+      const clarificationTitle = title && !weakClarificationTitles.includes(title)
+        ? title
+        : 'We need one more detail';
+      resultsSection.innerHTML =
+        '<div class="clarification-card">' +
+          '<div class="clarification-title">' + escapeHtml(clarificationTitle) + '</div>' +
+          '<div class="clarification-message">' + escapeHtml(message || 'Choose the closest option so we can guide you better.') + '</div>' +
+          clarifierQuestion +
+          clarifierChips +
+          '<div class="clarification-fallback">' +
+            '<div class="clarification-fallback-copy">Not sure what to choose? A care coordinator can help route you to the right specialist.</div>' +
+            '<a class="consult-btn primary consultation-trigger" href="#" data-treatment="Doctor Consultation">Book Free Consultation</a>' +
+          '</div>' +
+        '</div>';
+      return;
+    }
+
     const header = '<div class="results-header">' +
       '<div class="results-title">' + escapeHtml(title) + '</div>' +
       '<div class="results-message">' + escapeHtml(message) + '</div>' +
@@ -937,7 +982,7 @@ HTML_PAGE = """<!DOCTYPE html>
       return;
     }
 
-    if (state === 'direct_match' || state === 'needs_confirmation' || state === 'needs_clarification') {
+    if (state === 'direct_match' || state === 'needs_confirmation') {
       const primary = decision && decision.primary_result ? decision.primary_result : items[0];
       const primaryKey = resultKey(primary);
       const sourceAlternatives = decision && decision.alternatives && decision.alternatives.length
@@ -948,9 +993,7 @@ HTML_PAGE = """<!DOCTYPE html>
         .slice(0, 3);
       const primaryBadge = state === 'direct_match'
         ? 'Best Match'
-        : state === 'needs_confirmation'
-          ? 'Likely Match'
-          : 'Starting Point';
+        : 'Likely Match';
 
       resultsSection.innerHTML =
         header +
@@ -963,6 +1006,56 @@ HTML_PAGE = """<!DOCTYPE html>
       header +
       renderPrimaryTreatmentCard(items[0], 'Likely Match') +
       renderAlternativeCards(items.slice(1, 4));
+  }
+
+  function cleanQuery(value) {
+    const collapsed = (value || "").replace(/\\s+/g, " ").trim();
+    const tokens = collapsed.split(" ").filter(Boolean);
+    if (tokens.length < 2 || tokens.length % 2 !== 0) return collapsed;
+
+    for (let size = Math.floor(tokens.length / 2); size >= 1; size--) {
+      if (tokens.length % size !== 0) continue;
+      const phrase = tokens.slice(0, size).join(" ");
+      let repeats = true;
+      for (let i = size; i < tokens.length; i += size) {
+        if (tokens.slice(i, i + size).join(" ") !== phrase) {
+          repeats = false;
+          break;
+        }
+      }
+      if (repeats) return phrase;
+    }
+    return collapsed;
+  }
+
+  function renderClarifierQuestion(decision) {
+    return decision && decision.clarifier_question
+      ? '<div class="clarifier-question">' + escapeHtml(decision.clarifier_question) + '</div>'
+      : '';
+  }
+
+  function renderClarifierChips(decision) {
+    if (!decision || !decision.clarifier_chips || !decision.clarifier_chips.length) return '';
+    return '<div class="clarifier-chips">' + decision.clarifier_chips.map(renderClarifierChip).join("") + '</div>';
+  }
+
+  function renderClarifierChip(chip) {
+    const label = typeof chip === 'string' ? chip : (chip && chip.label) || '';
+    const action = typeof chip === 'string' ? '' : (chip && chip.action) || '';
+    const targetQuery = typeof chip === 'string' ? label : (chip && chip.target_query) || label;
+    if (isConsultationChip(label, action)) {
+      return '<a class="clarifier-chip consultation-trigger" href="#" data-treatment="Doctor Consultation">' + escapeHtml(label) + '</a>';
+    }
+    return '<a class="clarifier-chip" href="/?q=' + encodeURIComponent(cleanQuery(targetQuery)) + '">' + escapeHtml(label) + '</a>';
+  }
+
+  function isConsultationChip(label, action) {
+    const normalized = (label || "").toLowerCase().trim();
+    return action === 'consultation'
+      || normalized === 'not sure'
+      || normalized === 'talk to doctor'
+      || normalized === 'book consultation'
+      || normalized === 'doctor consult';
   }
 
   function escapeHtml(s) {
