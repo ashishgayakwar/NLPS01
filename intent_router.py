@@ -14,7 +14,7 @@ class JourneyDecision:
     primary_result: dict | None
     alternatives: list[dict]
     clarifier_question: str
-    clarifier_chips: list[str]
+    clarifier_chips: list[str | dict]
     safety_note: str
 
 
@@ -22,6 +22,7 @@ RISKY_TERMS = (
     "bahut bleeding",
     "severe bleeding",
     "chest pain",
+    "breathing problem",
     "emergency",
 )
 
@@ -41,6 +42,25 @@ CLEAR_TREATMENT_TERMS = (
     "bachcha nahi",
     "bacha nahi",
     "infertility",
+    "cataract",
+    "fissure",
+    "fistula",
+)
+
+BROAD_SYMPTOM_TERMS = (
+    "body pain",
+    "pain",
+    "dard",
+    "badan dard",
+    "sharir dard",
+    "weakness",
+    "kamzori",
+    "thakan",
+    "tired",
+    "fatigue",
+    "fever",
+    "bukhar",
+    "not feeling well",
 )
 
 BROAD_STONE_TERMS = (
@@ -64,15 +84,71 @@ SPECIFIC_STONE_TERMS = (
     "pitt ki thaili",
 )
 
+def _target_chip(label: str, target_query: str) -> dict:
+    return {"label": label, "target_query": target_query}
+
+
+def _consultation_chip(label: str = "Not sure") -> dict:
+    return {"label": label, "action": "consultation"}
+
+
 BROAD_BODY_PART_CHIPS = {
-    "kaan": ["kaan dard", "kaan se paani", "sunai kam dena", "kaan ka parda"],
-    "ear": ["ear pain", "ear discharge", "hearing loss", "eardrum issue"],
-    "pet": ["pet me jalan", "pet dard", "pet ki pathri", "hernia"],
-    "stomach": ["stomach pain", "acidity", "gallstone", "hernia"],
-    "urine": ["urine me jalan", "urine me blood", "kidney stone", "urine rukna"],
-    "peshab": ["peshab me jalan", "peshab me khoon", "pathri", "peshab rukna"],
-    "ghutna": ["ghutne mein dard", "ghutne ki chot", "knee replacement", "ligament tear"],
-    "knee": ["knee pain", "knee injury", "knee replacement", "ligament tear"],
+    "kaan": [
+        _target_chip("kaan dard", "ear pain"),
+        _target_chip("kaan se paani", "ear discharge"),
+        _target_chip("sunai kam dena", "hearing loss"),
+        _target_chip("kaan ka parda", "eardrum issue"),
+        _consultation_chip(),
+    ],
+    "ear": [
+        _target_chip("ear pain", "ear pain"),
+        _target_chip("ear discharge", "ear discharge"),
+        _target_chip("hearing loss", "hearing loss"),
+        _target_chip("eardrum issue", "eardrum issue"),
+        _consultation_chip(),
+    ],
+    "pet": [
+        _target_chip("pet me jalan", "acidity"),
+        _target_chip("pet dard", "stomach pain"),
+        _target_chip("pet ki pathri", "kidney stone"),
+        _target_chip("hernia", "hernia"),
+        _consultation_chip(),
+    ],
+    "stomach": [
+        _target_chip("stomach pain", "stomach pain"),
+        _target_chip("acidity", "acidity"),
+        _target_chip("gallstone", "gallstone"),
+        _target_chip("hernia", "hernia"),
+        _consultation_chip(),
+    ],
+    "urine": [
+        _target_chip("urine me jalan", "urine burning"),
+        _target_chip("urine me blood", "blood in urine"),
+        _target_chip("kidney stone", "kidney stone"),
+        _target_chip("urine rukna", "urine retention"),
+        _consultation_chip(),
+    ],
+    "peshab": [
+        _target_chip("peshab me jalan", "urine burning"),
+        _target_chip("peshab me khoon", "blood in urine"),
+        _target_chip("pathri", "kidney stone"),
+        _target_chip("peshab rukna", "urine retention"),
+        _consultation_chip(),
+    ],
+    "ghutna": [
+        _target_chip("ghutne mein dard", "knee pain"),
+        _target_chip("ghutne ki chot", "knee injury"),
+        _target_chip("knee replacement", "knee replacement"),
+        _target_chip("ligament tear", "ligament tear"),
+        _consultation_chip(),
+    ],
+    "knee": [
+        _target_chip("knee pain", "knee pain"),
+        _target_chip("knee injury", "knee injury"),
+        _target_chip("knee replacement", "knee replacement"),
+        _target_chip("ligament tear", "ligament tear"),
+        _consultation_chip(),
+    ],
 }
 
 
@@ -90,10 +166,61 @@ def _has_ambiguous_stone_intent(query: str) -> bool:
     return has_broad_stone and not has_specific_stone
 
 
+def _is_broad_symptom_query(query: str) -> bool:
+    tokens = set(query.split())
+    if query in BROAD_SYMPTOM_TERMS:
+        return True
+    if "not feeling well" in query:
+        return len(tokens) <= 4
+
+    broad_tokens = {
+        "body",
+        "pain",
+        "dard",
+        "badan",
+        "sharir",
+        "weakness",
+        "kamzori",
+        "thakan",
+        "tired",
+        "fatigue",
+        "fever",
+        "bukhar",
+    }
+    filler_tokens = {"me", "mein", "mai", "hai", "ho", "raha", "rahi", "lag", "lagti", "lagta"}
+    return bool(tokens) and tokens <= broad_tokens | filler_tokens and bool(tokens & broad_tokens)
+
+
+def _broad_symptom_clarification(results: list[dict]) -> JourneyDecision:
+    return JourneyDecision(
+        state="needs_clarification",
+        title="We need one more detail",
+        message="This can happen for many reasons. Choose the closest symptom area so we can guide you better.",
+        primary_result=results[0] if results else None,
+        alternatives=results[1:4] if len(results) > 1 else [],
+        clarifier_question="Where are you feeling the problem most?",
+        clarifier_chips=[
+            _target_chip("Stomach / abdomen", "stomach pain"),
+            _target_chip("Urine / kidney area", "kidney stone pain"),
+            _target_chip("Back or spine", "back pain"),
+            _target_chip("Knee / joints", "knee pain"),
+            _target_chip("Chest", "chest pain"),
+            _consultation_chip(),
+        ],
+        safety_note="This is only a search guide, not a diagnosis.",
+    )
+
+
 def _top_score(results: list[dict]) -> float:
     if not results:
         return 0.0
     return float(results[0].get("score", 0.0) or 0.0)
+
+
+def _top_bm25_score(results: list[dict]) -> float:
+    if not results:
+        return 0.0
+    return float(results[0].get("bm25_score", 0.0) or 0.0)
 
 
 def _doctor_fallback(query: str, results: list[dict], reason: str) -> JourneyDecision:
@@ -109,19 +236,30 @@ def _doctor_fallback(query: str, results: list[dict], reason: str) -> JourneyDec
     )
 
 
-def _clarifier_chips_for(query: str) -> list[str]:
-    chips: list[str] = []
+def _clarifier_chips_for(query: str) -> list[str | dict]:
+    chips: list[str | dict] = []
+    seen_labels: set[str] = set()
     for term, term_chips in BROAD_BODY_PART_CHIPS.items():
         if term in query:
             for chip in term_chips:
-                if chip not in chips:
+                label = chip.get("label", "") if isinstance(chip, dict) else chip
+                if label and label not in seen_labels:
                     chips.append(chip)
-    return chips[:6] or ["pain", "bleeding", "swelling", "infection", "operation", "doctor consult"]
+                    seen_labels.add(label)
+    return chips[:6] or [
+        _target_chip("pain", "pain"),
+        _target_chip("bleeding", "bleeding"),
+        _target_chip("swelling", "swelling"),
+        _target_chip("infection", "infection"),
+        _target_chip("operation", "operation"),
+        _consultation_chip("doctor consult"),
+    ]
 
 
 def route_patient_intent(query: str, results: list[dict]) -> JourneyDecision:
     normalized_query = _normalized(query)
     top_score = _top_score(results)
+    top_bm25_score = _top_bm25_score(results)
     top_result = results[0] if results else None
     alternatives = results[1:4] if len(results) > 1 else []
 
@@ -139,7 +277,11 @@ def route_patient_intent(query: str, results: list[dict]) -> JourneyDecision:
             primary_result=top_result,
             alternatives=alternatives,
             clarifier_question="Pathri can mean different types of stones. Which one is closest?",
-            clarifier_chips=["Kidney / urine stone", "Gallbladder stone", "Not sure"],
+            clarifier_chips=[
+                _target_chip("Kidney / urine stone", "kidney stone"),
+                _target_chip("Gallbladder stone", "gallstone"),
+                _consultation_chip(),
+            ],
             safety_note="This is only a search guide, not a diagnosis.",
         )
 
@@ -149,6 +291,9 @@ def route_patient_intent(query: str, results: list[dict]) -> JourneyDecision:
     )
     has_clear_treatment = _contains_any(normalized_query, CLEAR_TREATMENT_TERMS) or has_specific_stone_intent
     has_broad_body_part = any(term in normalized_query for term in BROAD_BODY_PART_CHIPS)
+
+    if _is_broad_symptom_query(normalized_query) and not has_clear_treatment:
+        return _broad_symptom_clarification(results)
 
     if has_broad_body_part and not has_clear_treatment:
         return JourneyDecision(
@@ -161,6 +306,9 @@ def route_patient_intent(query: str, results: list[dict]) -> JourneyDecision:
             clarifier_chips=_clarifier_chips_for(normalized_query),
             safety_note="This is only a search guide, not a diagnosis.",
         )
+
+    if not has_clear_treatment and top_bm25_score < 0.5:
+        return _doctor_fallback(query, results, "Your search does not clearly match an available treatment.")
 
     if top_score >= 0.85:
         return JourneyDecision(
