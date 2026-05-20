@@ -10,6 +10,7 @@ from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from intent_router import route_patient_intent
+from query_normalizer import normalize_query
 from search import SemanticSearch
 
 app = FastAPI(title="Pristyn Care - Smart Search Demo")
@@ -1245,9 +1246,12 @@ def home():
 
 @app.get("/search")
 def search(q: str = Query(..., min_length=1), top_k: int = 5):
-    results = engine.search(q, top_k=top_k)
-    decision = route_patient_intent(q, results)
+    normalized_q = normalize_query(q)
+    results = engine.search(normalized_q, top_k=top_k)
+    decision = route_patient_intent(normalized_q, results)
     print(f"[intent] query={q!r}")
+    if normalized_q != q:
+        print(f"[intent] normalized_query={normalized_q!r}")
     print(f"[intent] state={decision.state}")
     print(f"[intent] title={decision.title}")
     print(f"[intent] alternatives={len(decision.alternatives)}")
@@ -1255,7 +1259,12 @@ def search(q: str = Query(..., min_length=1), top_k: int = 5):
         print(f"[intent] clarifier_question={decision.clarifier_question}")
     if decision.clarifier_chips:
         print(f"[intent] clarifier_chips={decision.clarifier_chips}")
-    return JSONResponse({"query": q, "results": results, "decision": asdict(decision)})
+    return JSONResponse({
+        "query": q,
+        "normalized_query": normalized_q,
+        "results": results,
+        "decision": asdict(decision),
+    })
 
 
 if __name__ == "__main__":
