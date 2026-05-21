@@ -28,6 +28,24 @@ RISKY_TERMS = (
     "emergency",
 )
 
+BREATHING_DIFFICULTY_TERMS = (
+    "saans lene mein dikkat",
+    "saans lene me dikkat",
+    "saans lene mei dikkat",
+    "saans lene main dikkat",
+    "saans nahi aa rahi",
+    "saans nahi a rahi",
+    "saans phulna",
+    "saans fulna",
+    "saans chadhna",
+    "breathing problem",
+    "breathing difficulty",
+    "difficulty breathing",
+    "shortness of breath",
+    "breathless",
+    "choking",
+)
+
 CLEAR_TREATMENT_TERMS = (
     "bawasir",
     "bavasir",
@@ -162,6 +180,10 @@ def _contains_any(query: str, terms: tuple[str, ...]) -> bool:
     return any(term in query for term in terms)
 
 
+def _has_breathing_difficulty_risk(query: str) -> bool:
+    return _contains_any(query, BREATHING_DIFFICULTY_TERMS)
+
+
 def _has_ambiguous_stone_intent(query: str) -> bool:
     has_broad_stone = _contains_any(query, BROAD_STONE_TERMS)
     has_specific_stone = _contains_any(query, SPECIFIC_STONE_TERMS)
@@ -281,7 +303,7 @@ def route_patient_intent(query: str, results: list[dict]) -> JourneyDecision:
     top_result = results[0] if results else None
     alternatives = results[1:4] if len(results) > 1 else []
 
-    if _contains_any(normalized_query, RISKY_TERMS):
+    if _contains_any(normalized_query, RISKY_TERMS) or _has_breathing_difficulty_risk(normalized_query):
         return _doctor_fallback(query, results, "Your query includes a possible warning symptom.")
 
     body_system_decision = classify_body_system_intent(normalized_query)
