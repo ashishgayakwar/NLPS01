@@ -69,6 +69,19 @@ PROCTOLOGY_SYMPTOM_TERMS = (
     "khujli",
 )
 
+PROCTOLOGY_CLEAR_INTENT_TERMS = (
+    "bawasir",
+    "piles",
+    "fissure",
+    "anal fissure",
+    "fistula",
+    "anal fistula",
+    "bhagandar",
+    "anal abscess",
+    "rectal prolapse",
+    "pilonidal sinus",
+)
+
 UROLOGY_BODY_TERMS = (
     "urine",
     "urinary",
@@ -95,6 +108,17 @@ UROLOGY_SYMPTOM_TERMS = (
     "flow kam",
     "leakage",
     "leak",
+)
+
+UROLOGY_CLEAR_INTENT_TERMS = (
+    "kidney stone",
+    "urinary tract stone",
+    "bladder stone",
+    "prostate",
+    "urethral stricture",
+    "phimosis",
+    "circumcision",
+    "balanitis",
 )
 
 GYNECOLOGY_BODY_TERMS = (
@@ -125,6 +149,17 @@ GYNECOLOGY_SYMPTOM_TERMS = (
     "dard",
     "swelling",
     "sujan",
+)
+
+GYNECOLOGY_CLEAR_INTENT_TERMS = (
+    "irregular periods",
+    "vaginal bleeding",
+    "vaginal infection",
+    "vaginal itching",
+    "fibroid",
+    "ovarian cyst",
+    "pcos",
+    "pcod",
 )
 
 PREGNANCY_TERMS = (
@@ -243,18 +278,24 @@ def classify_body_system_intent(query: str) -> BodySystemDecision | None:
         _contains_any(normalized_query, query_tokens, PROCTOLOGY_BODY_TERMS)
         and _contains_any(normalized_query, query_tokens, PROCTOLOGY_SYMPTOM_TERMS)
     ):
+        if _contains_any(normalized_query, query_tokens, PROCTOLOGY_CLEAR_INTENT_TERMS):
+            return None
         return _proctology_decision()
 
     if (
         _contains_any(normalized_query, query_tokens, UROLOGY_BODY_TERMS)
         and _contains_any(normalized_query, query_tokens, UROLOGY_SYMPTOM_TERMS)
     ):
+        if _contains_any(normalized_query, query_tokens, UROLOGY_CLEAR_INTENT_TERMS):
+            return None
         return _urology_decision()
 
     if (
         _contains_any(normalized_query, query_tokens, GYNECOLOGY_BODY_TERMS)
         and _contains_any(normalized_query, query_tokens, GYNECOLOGY_SYMPTOM_TERMS)
     ):
+        if _contains_any(normalized_query, query_tokens, GYNECOLOGY_CLEAR_INTENT_TERMS):
+            return None
         return _gynecology_decision()
 
     return None
