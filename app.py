@@ -1096,7 +1096,7 @@ HTML_PAGE = """<!DOCTYPE html>
         : 'Likely Match';
 
       resultsSection.innerHTML =
-        header +
+        (state === 'direct_match' ? '' : header) +
         renderPrimaryTreatmentCard(primary, primaryBadge) +
         renderAlternativeCards(alternatives);
       return;
